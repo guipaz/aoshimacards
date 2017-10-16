@@ -27,10 +27,10 @@ public class WarriorPattern
 		grid [GetIndexFromRelativePosition (x, y)] = flags;
 	}
 
-    public bool CanAttackAt(Vector2 from, Vector2 to)
+    public bool CanAttackAt(Vector2 from, Vector2 to, bool xInverted = false)
 	{
-        int x = (int)(to.x - from.x);
-        int y = (int)((to.y - from.y) * -1);
+        int x = (int)(to.x - from.x) * (xInverted ? -1 : 1);
+        int y = (int)(to.y - from.y);
 
         int index = GetIndexFromRelativePosition(x, y);
         Debug.Log("Tried attacking at index:" + index);
@@ -41,10 +41,10 @@ public class WarriorPattern
         return (grid [index] & PatternFlags.Attack) == PatternFlags.Attack;
 	}
 
-	public bool CanMoveTo(Vector2 from, Vector2 to)
+	public bool CanMoveTo(Vector2 from, Vector2 to, bool xInverted = false)
 	{
-        int x = (int)(to.x - from.x);
-        int y = (int)((to.y - from.y) * -1);
+        int x = (int)(to.x - from.x) * (xInverted ? -1 : 1);
+        int y = (int)(to.y - from.y);
 
         int index = GetIndexFromRelativePosition(x, y);
         Debug.Log("Tried moving to index:" + index);
@@ -54,6 +54,20 @@ public class WarriorPattern
         
         return (grid [index] & PatternFlags.Movement) == PatternFlags.Movement;
 	}
+
+    public List<Vector2> GetLocationsForFlags(PatternFlags flags, bool xInverted = false)
+    {
+        List<Vector2> locations = new List<Vector2>();
+        for (int y = 0; y < PATTERN_HEIGHT; y++)
+        {
+            for (int x = 0; x < PATTERN_WIDTH; x++)
+            {
+                if ((grid[y * PATTERN_WIDTH + x] & flags) == flags)
+                    locations.Add(GetRelativePosition(x, y, xInverted));
+            }
+        }
+        return locations;
+    }
 
 	int GetIndexFromRelativePosition(int x, int y)
 	{
@@ -67,22 +81,8 @@ public class WarriorPattern
 		return rY * PATTERN_WIDTH + rX;
 	}
 
-    Vector2 GetRelativePosition(int rX, int rY)
+    Vector2 GetRelativePosition(int rX, int rY, bool xInverted = false)
     {
-        return new Vector2(rX - 3, rY - 3);
-    }
-
-    public List<Vector2> GetLocationsForFlags(PatternFlags flags)
-    {
-        List<Vector2> locations = new List<Vector2>();
-        for (int y = 0; y < PATTERN_HEIGHT; y++)
-        {
-            for (int x = 0; x < PATTERN_WIDTH; x++)
-            {
-                if ((grid[y * PATTERN_WIDTH + x] & flags) == flags)
-                    locations.Add(GetRelativePosition(x, y));
-            }
-        }
-        return locations;
+        return new Vector2((rX - 3) * (xInverted ? -1 : 1), rY - 3);
     }
 }

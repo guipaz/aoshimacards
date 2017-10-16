@@ -1,11 +1,14 @@
 fileFormatVersion: 2
 guid: d4c8a63bd9bdd184bbce518e30648cda
-timeCreated: 1506259096
+timeCreated: 1507240581
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
     21300000: actor_blue
     21300002: actor_yellow
+    21300004: actors_0
+    21300006: actors_1
+    21300008: actors_2
   serializedVersion: 4
   mipmaps:
     mipMapMode: 0
@@ -77,7 +80,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: actor_blue
+      name: actors_0
       rect:
         serializedVersion: 2
         x: 0
@@ -91,10 +94,24 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: actor_yellow
+      name: actors_1
       rect:
         serializedVersion: 2
         x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+    - serializedVersion: 2
+      name: actors_2
+      rect:
+        serializedVersion: 2
+        x: 128
         y: 0
         width: 64
         height: 64

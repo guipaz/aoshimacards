@@ -19,6 +19,7 @@ public class BattleSceneController : MonoBehaviour
     public BattleActor SelectedActor;
     public bool PerformedMovement;
     public bool PerformedAttack;
+    public bool PerformedTurn;
 
     Dictionary<FlowState, IFlowController> controllers;
     Vector3 lastMouseDragPos;
@@ -33,10 +34,18 @@ public class BattleSceneController : MonoBehaviour
 		}
 
 		if (GameData.CurrentBattle == null) {
-            BattleConfig config = new BattleConfig();
-            config.ChosenWarriors.Add(GameData.WarriorTypes["holy_knight"]);
-            config.ChosenWarriors.Add(GameData.WarriorTypes["dark_cleric"]);
-            GameData.StartBattle(config);
+            BattlePlayer playerA = new BattlePlayer("Stryfe");
+            BattlePlayer playerB = new BattlePlayer("Player Two");
+
+            playerA.AddWarrior(GameData.WarriorTypes["holy_knight"]);
+            playerA.AddWarrior(GameData.WarriorTypes["shadow_cleric"]);
+            playerA.AddWarrior(GameData.WarriorTypes["ninja"]);
+
+            playerB.AddWarrior(GameData.WarriorTypes["blood_mage"]);
+            playerB.AddWarrior(GameData.WarriorTypes["wild_hunter"]);
+            playerB.AddWarrior(GameData.WarriorTypes["sorcerer"]);
+
+            GameData.StartBattle(playerA, playerB);
 		}
 
         controllers = new Dictionary<FlowState, IFlowController>();
@@ -46,6 +55,7 @@ public class BattleSceneController : MonoBehaviour
         controllers.Add(FlowState.PerformMovementLocation,  new Flow_PerformMovement());
         controllers.Add(FlowState.FinishPlayerTurn,         new Flow_FinishTurn());
         controllers.Add(FlowState.EnemyTurn,                new Flow_EnemyTurn());
+        controllers.Add(FlowState.GameFinished,             new Flow_GameFinished());
 
         CanvasUtils.Canvas = Canvas;
 	}
@@ -58,19 +68,38 @@ public class BattleSceneController : MonoBehaviour
             c.Setup();
 
         CreateBoard();
-        CreateEnemyActors();
+        CreateOrbs();
         CreateActorObjects();
-        Camera.main.transform.position += new Vector3((GameData.CurrentBattle.Config.SideWidth * 2 + GameData.CurrentBattle.Config.NeutralWidth) / 2f,
-                                                      GameData.CurrentBattle.Config.Height / 2f);
+        Camera.main.transform.position += new Vector3(GameData.CurrentBattle.Board.Width / 2f,
+                                                      GameData.CurrentBattle.Board.Height / 2f);
 
+        GameData.CurrentBattle.CurrentPlayer = GameData.CurrentBattle.PlayerA;
         SwitchFlow(FlowState.AddingWarriors);
 	}
 
-    void CreateEnemyActors()
+    void CreateOrbs()
     {
-        //TODO mock only
-        BattleActor actor = new BattleActor(GameData.WarriorTypes["holy_knight"], "enemy");
-        GameData.CurrentBattle.AddActor(actor);
+        Sprite[] sprites = Resources.LoadAll<Sprite>("Sprites/actors");
+
+        BattleObject obj = new BattleObject(GameData.CurrentBattle.PlayerA);
+        obj.Properties["isOrb"] = "true";
+        GameObject gObj = new GameObject("Orb_" + obj.Owner);
+        SpriteRenderer r = gObj.AddComponent<SpriteRenderer>();
+        r.sprite = sprites[2];
+        obj.GameObject = gObj;
+        obj.SetDescription(obj.Owner.Name + "'s Orb");
+        gObj.SetActive(true);
+        obj.SetPosition(new Vector2(0, GameData.CurrentBattle.Board.Height / 2));
+
+        obj = new BattleObject(GameData.CurrentBattle.PlayerB);
+        obj.Properties["isOrb"] = "true";
+        gObj = new GameObject("Orb_" + obj.Owner);
+        r = gObj.AddComponent<SpriteRenderer>();
+        r.sprite = sprites[2];
+        obj.GameObject = gObj;
+        obj.SetDescription(obj.Owner.Name + "'s Orb");
+        gObj.SetActive(true);
+        obj.SetPosition(new Vector2(GameData.CurrentBattle.Board.Width - 1, GameData.CurrentBattle.Board.Height / 2));
     }
 
     public void SwitchFlow(FlowState flow)
@@ -83,18 +112,16 @@ public class BattleSceneController : MonoBehaviour
 
     void CreateBoard()
     {
+        Board board = new Board();
+
         GameObject boardObject = new GameObject("_BOARD");
-
         MeshFilter meshFilter = (MeshFilter)boardObject.AddComponent(typeof(MeshFilter));
-        meshFilter.mesh = MeshGenerator.GetBoardMesh(GameData.CurrentBattle.Config);
-
+        meshFilter.mesh = MeshGenerator.GetBoardMesh(board);
         MeshRenderer renderer = boardObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
         renderer.material.shader = Shader.Find ("Sprites/Default");
-
         Texture2D texture = (Texture2D)Resources.Load("Sprites/board");
         renderer.material.mainTexture = texture;
 
-        Board board = new Board(GameData.CurrentBattle.Config);
         board.GameObject = boardObject;
         GameData.CurrentBattle.Board = board;
     }
@@ -103,12 +130,15 @@ public class BattleSceneController : MonoBehaviour
     {
         Sprite[] sprites = Resources.LoadAll<Sprite>("Sprites/actors");
 
-        foreach (BattleActor actor in GameData.CurrentBattle.Actors)
+        List<BattleActor> all = new List<BattleActor>();
+        all.AddRange(GameData.CurrentBattle.PlayerA.AvailableActors);
+        all.AddRange(GameData.CurrentBattle.PlayerB.AvailableActors);
+        foreach (BattleActor actor in all)
         {
-            GameObject obj = new GameObject("Actor_" + actor.Owner + "_" + actor.Type.Identifier);
+            GameObject obj = new GameObject("Actor_" + actor.Owner.Name + "_" + actor.Type.Identifier);
             SpriteRenderer r = obj.AddComponent<SpriteRenderer>();
 
-            if (actor.Owner == "player")
+            if (actor.Owner == GameData.CurrentBattle.PlayerA)
                 r.sprite = sprites[0];
             else
                 r.sprite = sprites[1];
@@ -116,6 +146,10 @@ public class BattleSceneController : MonoBehaviour
             actor.GameObject = obj;
 
             obj.SetActive(false);
+
+            // also inverts player b's actors
+            if (actor.Owner == GameData.CurrentBattle.PlayerB)
+                actor.SetInverted(true);
         }
     }
 
@@ -150,11 +184,14 @@ public class BattleSceneController : MonoBehaviour
         if (!BoardUtils.IsInsideBoard(pos))
             return;
         
-        BattleActor act = GameData.CurrentBattle.Board.GetActorAt(pos);
-        if (act != null)
+        BattleObject obj = GameData.CurrentBattle.Board.GetObjectAt(pos);
+        if (obj != null)
         {
-            InfoText.text = act.Type.Name + " (" + act.CurrentHP + ")";
+            InfoText.text = obj.Description;
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape) && PerformMenu.Active)
+            PerformMenu.Deactivate();
 
         if (controllers.ContainsKey(CurrentFlow))
             controllers[CurrentFlow].Update();

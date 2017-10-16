@@ -12,21 +12,8 @@ public class Flow_PerformMovement : IFlowController
     public void Start()
     {
         BattleSceneController.Main.HeadsupText.text = "Choose the movement location (ESC to cancel)";
-
-        GameObject patternObject = new GameObject("_MOVEMENT_PATTERN");
-        patternObject.transform.position = new Vector3(patternObject.transform.position.x, patternObject.transform.position.y, -5); //TODO
-
-        MeshFilter meshFilter = (MeshFilter)patternObject.AddComponent(typeof(MeshFilter));
-        meshFilter.mesh = MeshGenerator.GetPatternMesh(BattleSceneController.Main.SelectedActor.Type.Pattern, PatternFlags.Movement,
-            BattleSceneController.Main.SelectedActor.Position);
-
-        MeshRenderer renderer = patternObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-        renderer.material.shader = Shader.Find ("Sprites/Default");
-
-        Texture2D texture = (Texture2D)Resources.Load("Sprites/board");
-        renderer.material.mainTexture = texture;
-
-        currentPattern = patternObject;
+        currentPattern = BattleSceneController.Main.SelectedActor.Type.Pattern.GetVisualObject(PatternFlags.Movement, BattleSceneController.Main.SelectedActor.Position,
+                                                                                               BattleSceneController.Main.SelectedActor.Inverted);
     }
 
     void Choose(Vector2 position)

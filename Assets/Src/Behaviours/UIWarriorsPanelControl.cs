@@ -8,9 +8,9 @@ public class UIWarriorsPanelControl : MonoBehaviour {
 	public MainMenuController controller;
 
 	public GameObject warriorOptionPrefab;
-
 	public GameObject availableWarriorsPanel;
 	public GameObject selectedWarriorsPanel;
+    public Text nameFieldText;
 
 	public List<WarriorType> chosenWarriors;
 
@@ -21,6 +21,7 @@ public class UIWarriorsPanelControl : MonoBehaviour {
 		controller = GameObject.Find ("_CONTROLLER").GetComponent<MainMenuController>();
 		availableWarriorsPanel = transform.Find ("AvailableWarriorsPanel").Find("Inner").gameObject;
 		selectedWarriorsPanel = transform.Find ("SelectedWarriorsPanel").Find("Inner").gameObject;
+        nameFieldText = transform.Find("NameField").Find("Text").GetComponent<Text>();
 	}
 
 	public void Clear()
@@ -31,6 +32,7 @@ public class UIWarriorsPanelControl : MonoBehaviour {
 		foreach (Transform t in selectedWarriorsPanel.transform)
 			Destroy (t.gameObject);
 
+        nameFieldText.text = "";
 		chosenWarriors.Clear ();
 	}
 
@@ -48,7 +50,7 @@ public class UIWarriorsPanelControl : MonoBehaviour {
 		if (chosenWarriors.Contains (warrior)) {
 			RemoveSelectedWarrior (warrior);
 		} else {
-			if (chosenWarriors.Count < 2) {
+			if (chosenWarriors.Count < 3) {
 				AddSelectedWarrior (warrior);
 			}
 		}
@@ -75,13 +77,17 @@ public class UIWarriorsPanelControl : MonoBehaviour {
 	public void OnClickButton(string id)
 	{
 		if (id == "Battle") {
-			if (chosenWarriors.Count < 2) {
+            if (nameFieldText.text == "")
+                return;
+            
+			if (chosenWarriors.Count < 3) {
 				return;
 			}
 
-			BattleConfig config = new BattleConfig ();
-			config.ChosenWarriors = new List<WarriorType> (chosenWarriors);
-			controller.StartBattle (config);
+            BattlePlayer player = new BattlePlayer(nameFieldText.text);
+            foreach (WarriorType type in chosenWarriors)
+                player.AddWarrior(type);
+			controller.SetPlayer(player);
 		}
 		else if (id == "Back") {
 			controller.ShowMainMenu ();

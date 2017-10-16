@@ -11,12 +11,14 @@ public class UIPerformMenu : MonoBehaviour
 
     public Button MoveButton;
     public Button AttackButton;
+    public Button TurnButton;
 
     public Action<BattleActor> OnMove { get; set; }
     public Action<BattleActor> OnAttack { get; set; }
+    public Action<BattleActor> OnTurn { get; set; }
     public Action<BattleActor> OnFinish { get; set; }
 
-    public void Activate(BattleActor actor, bool movement = true, bool attack = true)
+    public void Activate(BattleActor actor, bool movement = true, bool attack = true, bool turn = true)
     {
         Active = true;
         Actor = actor;
@@ -30,6 +32,7 @@ public class UIPerformMenu : MonoBehaviour
 
         MoveButton.interactable = movement;
         AttackButton.interactable = attack;
+        TurnButton.interactable = turn;
     }
 
     public void Deactivate()
@@ -50,6 +53,11 @@ public class UIPerformMenu : MonoBehaviour
         {
             if (OnAttack != null)
                 OnAttack.Invoke(Actor);
+        }
+        else if (message == "turn")
+        {
+            if (OnTurn != null)
+                OnTurn.Invoke(Actor);
         }
         else if (message == "finish")
         {

@@ -4,17 +4,18 @@ using System.Collections.Generic;
 
 public class MeshGenerator
 {
-    public static Mesh GetBoardMesh(BattleConfig config)
+    public static Mesh GetBoardMesh(Board board)
 	{
-        int sideSize = config.SideWidth;
-        int sizeY = config.Height;
-        int neutralSize = config.NeutralWidth;
+        int sideSize = (board.Width - board.NeutralSize) / 2;
+        int sizeY = board.Height;
+        int neutralSize = board.NeutralSize;
 
         int sizeX = sideSize * 2 + neutralSize;
 
 		Vector3[] vertices = new Vector3[sizeX * sizeY * 4];
 		int[] triangles = new int[sizeX * sizeY * 6];
 		Vector2[] uv = new Vector2[vertices.Length];
+        Vector3[] normals = new Vector3[vertices.Length];
 
 		//TODO
 
@@ -30,25 +31,26 @@ public class MeshGenerator
 
                 int tX = (y * sizeX + x) * 6;
                 triangles[tX]       = vX;
-                triangles[tX + 1]   = vX + 1;
-                triangles[tX + 2]   = vX + 2;
+                triangles[tX + 1]   = vX + 2;
+                triangles[tX + 2]   = vX + 1;
                 triangles[tX + 3]   = vX;
-                triangles[tX + 4]   = vX + 2;
-                triangles[tX + 5]   = vX + 3;
+                triangles[tX + 4]   = vX + 3;
+                triangles[tX + 5]   = vX + 2;
 
                 //TODO varies depending on the X
                 float xOffset = 0;
-                if (x < sideSize)
-                    xOffset = 0;
-                else if (x < sideSize + 3)
-                    xOffset = 0.25f;
-                else
-                    xOffset = 0.5f;
+                if (x >= sideSize && x < sideSize + neutralSize)
+                    xOffset = 64 / 256f;
 
                 uv[vX]      = new Vector2(xOffset, 0);
-                uv[vX + 1]  = new Vector2(xOffset + 0.25f, 0);
-                uv[vX + 2]  = new Vector2(xOffset + 0.25f, 1);
+                uv[vX + 1]  = new Vector2(xOffset + 64 / 256f, 0);
+                uv[vX + 2]  = new Vector2(xOffset + 64 / 256f, 1);
                 uv[vX + 3]  = new Vector2(xOffset, 1);
+
+                normals[vX] = Vector3.up;
+                normals[vX + 1] = Vector3.up;
+                normals[vX + 2] = Vector3.up;
+                normals[vX + 3] = Vector3.up;
             }
         }
 		
@@ -56,14 +58,15 @@ public class MeshGenerator
 		mesh.vertices = vertices;
 		mesh.triangles = triangles;
 		mesh.uv = uv;
+        mesh.normals = normals;
 		mesh.RecalculateNormals ();
 
 		return mesh;
 	}
 
-    public static Mesh GetPatternMesh(WarriorPattern pattern, PatternFlags flags, Vector2 position)
+    public static Mesh GetPatternMesh(WarriorPattern pattern, PatternFlags flags, Vector2 position, bool inverted = false)
     {
-        List<Vector2> locations = pattern.GetLocationsForFlags(flags);
+        List<Vector2> locations = pattern.GetLocationsForFlags(flags, inverted);
         int sizeX = GameData.CurrentBattle.Board.Width;
 
         Vector3[] vertices = new Vector3[locations.Count * 4];
@@ -72,13 +75,11 @@ public class MeshGenerator
 
         position = BoardUtils.BoardToWorldPosition(position);
 
-        //TODO
-
         int count = 0;
         foreach (Vector2 location in locations)
         {
-            int x = (int)(position.x + location.x); //TODO
-            int y = (int)(position.y + location.y); //TODO
+            int x = ((int)position.x + (int)location.x); //TODO
+            int y = ((int)position.y - (int)location.y); //TODO
 
             if (!BoardUtils.IsInsideBoard(new Vector2(x, y)))
                 continue;
@@ -98,7 +99,7 @@ public class MeshGenerator
             triangles[tX + 5]   = vX + 3;
 
             //TODO varies depending on the X
-            float xOffset = 0.75f;
+            float xOffset = (flags & PatternFlags.Attack) == PatternFlags.Attack ? 0.5f : 0.75f;
             uv[vX]      = new Vector2(xOffset, 0);
             uv[vX + 1]  = new Vector2(xOffset + 0.25f, 0);
             uv[vX + 2]  = new Vector2(xOffset + 0.25f, 1);

@@ -9,6 +9,9 @@ public class MainMenuController : MonoBehaviour
 	public UIWarriorsPanelControl warriorsControl;
 	public GameObject mainMenuControl;
 
+    BattlePlayer playerA;
+    BattlePlayer playerB;
+
 	public void Awake()
 	{
 		warriorsControl = canvas.transform.Find ("WarriorChoosePanel").GetComponent<UIWarriorsPanelControl>();
@@ -29,20 +32,20 @@ public class MainMenuController : MonoBehaviour
 		mainMenuControl.SetActive (true);
 	}
 
-	public void ShowChooseWarriors()
+    public void ShowChooseWarriors(string playerName)
 	{
 		mainMenuControl.SetActive (false);
 
 		warriorsControl.Clear();
-		warriorsControl.gameObject.SetActive (true);
+		warriorsControl.gameObject.SetActive(true);
 
 		foreach (WarriorType warrior in GameData.WarriorTypes.Values)
-			warriorsControl.AddAvailableWarrior (warrior);
+			warriorsControl.AddAvailableWarrior(warrior);
 	}
 
 	public void OnClickedNewBattle()
 	{
-		ShowChooseWarriors ();
+		ShowChooseWarriors("Player A");
 	}
 
 	public void OnClickedExit()
@@ -50,9 +53,18 @@ public class MainMenuController : MonoBehaviour
 		Application.Quit();
 	}
 
-	public void StartBattle(BattleConfig config)
+    public void SetPlayer(BattlePlayer player)
 	{
-		GameData.StartBattle (config);
-		SceneManager.LoadScene ("BattleScene");
+        if (playerA == null)
+        {
+            playerA = player;
+            ShowChooseWarriors("Player B");
+            return;
+        }
+
+        playerB = player;
+
+        GameData.StartBattle(playerA, playerB);
+		SceneManager.LoadScene("BattleScene");
 	}
 }

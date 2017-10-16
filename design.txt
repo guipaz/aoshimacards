@@ -1,0 +1,38 @@
+Components
+
+- Deck of character cards, each card has a movement pattern, an attack pattern, attack value, hitpoints value and may have an ability
+- A board, where the player will place their defenses in the position they want
+
+Setup
+
+- Each player chooses their 3 warriors
+- The orb will be put in the middle row of the penultimate column for each team
+- Before the match, the players will receive 5 random pattern cards and choose 2, that'll be revealed after both picked them up
+- After choosing the pattern card, the players will put 2 barricades
+- After setting the board, the players will place their warriors on the board
+- When the match starts, both boards will connect with two lines of neutral territory between them
+- The first player is defined and plays with one warrior, as the second player plays with two in the first turn
+
+Rules
+
+- Each turn, the current player can perform with a warrior or turn to the other side
+- Performing can be one or more of those, in any order: move, attack and use their ability
+- Turning consumes the whole action of that warrior, unless said otherwise
+- When attacked, the card's hitpoints are reduced by the attack value of the attacker
+- When an orb receives an attack, the attacker team wins
+- After using an ability, it can't be used the next turn
+- Unless defined otherwise by an ability, a card can't move or attack past an enemy card or a barricade
+- The pattern cards picked at the start of the game can be used ONE time only each, with ANY card, for either attack or movement
+- When the turn ends, the warrior is marked as "used" and can only be used in the next round
+- After every warrior is played, the round is over and all warriors are available again
+
+Warrior Classes
+
+- (1) Holy Knight 	(3 ATQ, 16 HP) 	- Can fully heal an ally (not themself)
+- (2) Blood Mage 	(4 ATQ, 8 HP) 	- Loses 2 HP to attack all their attack cells simultaneously
+- (3) Shadow Cleric (5 ATQ, 8 HP) 	- Change places with an enemy inside their movement area
+- (4) Ninja 		(3 ATQ, 9 HP) 	- Can attack and move past enemies, but can't attack the totem
+- (5) Barbarian 	(4 ATQ, 12 HP) 	- Attacks with double damage but loses 3 HP
+- (6) Wild Hunter 	(3 ATQ, 10 HP) 	- Can attack through barricades
+- (7) Sorcerer 		(4 ATQ, 8 HP) 	- Attacks all their attack area simultaneously
+- (8) Assassin 		(0 ATQ, 6 HP) 	- Can turn and attack in the same turn, can only attack enemies from behind, instantly kills any enemy and can't attack the orb

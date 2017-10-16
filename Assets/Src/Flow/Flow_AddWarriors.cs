@@ -4,6 +4,7 @@ using UnityEngine;
 public class Flow_AddWarriors : IFlowController
 {
     int addWarriors_index;
+    int addedPlayers = 0;
 
     public void Setup()
     {
@@ -12,69 +13,63 @@ public class Flow_AddWarriors : IFlowController
     public void Start()
     {
         BattleSceneController.Main.HeadsupText.gameObject.SetActive(true);
-        addWarriors_index = 0;
+        addWarriors_index = -1;
         Next();
     }
 
     void Next()
     {
-        BattleActor actor = GameData.CurrentBattle.Actors[addWarriors_index];
-        BattleSceneController.Main.HeadsupText.text = "Place your " + actor.Type.Name;
+        bool adding = false;
+        while (addWarriors_index + 1 < GameData.CurrentBattle.CurrentPlayer.AvailableActors.Count)
+        {
+            addWarriors_index++;
+            adding = true;
+            BattleObject obj = GameData.CurrentBattle.CurrentPlayer.AvailableActors[addWarriors_index];
+            if (!(obj is BattleActor))
+                continue;
+
+            BattleActor actor = obj as BattleActor;
+            BattleSceneController.Main.HeadsupText.text = "Place " + GameData.CurrentBattle.CurrentPlayer.Name + "'s " + actor.Type.Name;
+            break;
+        }
+
+        if (!adding && addWarriors_index + 1 >= GameData.CurrentBattle.CurrentPlayer.AvailableActors.Count)
+        {
+            addedPlayers++;
+            if (addedPlayers == 2)
+            {
+                BattleSceneController.Main.SwitchFlow(FlowState.ChooseActorToPerform);
+            }
+            else
+            {
+                GameData.CurrentBattle.CurrentPlayer = GameData.CurrentBattle.CurrentPlayer.GetEnemy();
+                BattleSceneController.Main.SwitchFlow(FlowState.AddingWarriors);
+            }
+        }
     }
 
     void Place(Vector2 at, BattleActor actor)
     {
-        if (!BoardUtils.IsInsideBoard(at))
+        if (!BoardUtils.IsInsideBoard(at) || !BoardUtils.IsPositionEmpty(at))
             return;
         
-        if (at.x >= BoardUtils.Current.SideWidth)
+        if ((GameData.CurrentBattle.CurrentPlayer == GameData.CurrentBattle.PlayerA &&
+            at.x >= (GameData.CurrentBattle.Board.Width - GameData.CurrentBattle.Board.NeutralSize) / 2) ||
+            (GameData.CurrentBattle.CurrentPlayer == GameData.CurrentBattle.PlayerB &&
+            at.x < (GameData.CurrentBattle.Board.Width - GameData.CurrentBattle.Board.NeutralSize) / 2 + GameData.CurrentBattle.Board.NeutralSize))
             return;
 
         actor.SetPosition(at);
         actor.GameObject.SetActive(true);
 
-        bool adding = false;
-        while (addWarriors_index + 1 < GameData.CurrentBattle.Actors.Count)
-        {
-            addWarriors_index++;
-            if (GameData.CurrentBattle.Actors[addWarriors_index].Owner == "player")
-            {
-                adding = true;
-                Next();
-                break;
-            }
-        }
-
-        if (!adding && addWarriors_index + 1 >= GameData.CurrentBattle.Actors.Count)
-        {
-            SetupEnemy();
-            BattleSceneController.Main.SwitchFlow(FlowState.ChooseActorToPerform);
-        }
-    }
-
-    void SetupEnemy()
-    {
-        System.Random r = new System.Random();
-
-        foreach (BattleActor actor in GameData.CurrentBattle.Actors)
-        {
-            if (actor.Owner == "player")
-                continue;
-
-            int x = r.Next(4);
-            int y = r.Next(6);
-
-            x += BoardUtils.Current.BoardWidth - BoardUtils.Current.SideWidth;
-            actor.SetPosition(new Vector2(x, y));
-            actor.GameObject.SetActive(true);
-        }
+        Next();
     }
 
     public void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Place(BoardUtils.ScreenToBoardPosition(Input.mousePosition), GameData.CurrentBattle.Actors[addWarriors_index]);
+            Place(BoardUtils.ScreenToBoardPosition(Input.mousePosition), GameData.CurrentBattle.CurrentPlayer.AvailableActors[addWarriors_index] as BattleActor);
         }
     }
 

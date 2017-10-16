@@ -18,5 +18,6 @@ public enum FlowState
 
     FinishPlayerTurn,
 
-    EnemyTurn
+    EnemyTurn,
+    GameFinished
 }

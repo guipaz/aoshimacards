@@ -14,12 +14,21 @@ public class Flow_FinishTurn : IFlowController
 
     void Finish(BattleActor actor)
     {
+        GameData.CurrentBattle.RegisterUsedActor(actor);
+
+        if (GameData.CurrentBattle.IsRoundOver())
+        {
+            GameData.CurrentBattle.FinishRound();
+        }
+
         BattleSceneController.Main.PerformMenu.Deactivate();
         BattleSceneController.Main.SelectedActor = null;
         BattleSceneController.Main.PerformedMovement = false;
         BattleSceneController.Main.PerformedAttack = false;
+        BattleSceneController.Main.PerformedTurn = false;
 
-        BattleSceneController.Main.SwitchFlow(FlowState.EnemyTurn);
+        GameData.CurrentBattle.CurrentPlayer = GameData.CurrentBattle.CurrentPlayer.GetEnemy();
+        BattleSceneController.Main.SwitchFlow(FlowState.ChooseActorToPerform);
     }
 
     public void Update()

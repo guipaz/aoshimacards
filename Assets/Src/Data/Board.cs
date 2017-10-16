@@ -7,24 +7,32 @@ public class Board
     public int Height { get; private set; }
     public int NeutralSize { get; private set; }
     public GameObject GameObject { get; set; }
-    public BattleActor[,] ActorGrid { get; private set; }
+    public BattleObject[,] ObjectGrid { get; private set; }
 
-    public Board(BattleConfig config)
+    public Board()
     {
-        Width = config.BoardWidth;
-        Height = config.Height;
-        NeutralSize = config.NeutralWidth;
+        Width = 11;
+        Height = 7;
+        NeutralSize = 3;
 
-        ActorGrid = new BattleActor[Width, Height];
+        ObjectGrid = new BattleObject[Width, Height];
     }
 
     public BattleActor GetActorAt(Vector2 position)
     {
-        return ActorGrid[(int)position.x, (int)position.y];
+        BattleObject obj = GetObjectAt(position);
+        if (obj is BattleActor)
+            return obj as BattleActor;
+        return null;
     }
 
-    public void SetActorAt(BattleActor actor, Vector2 position)
+    public BattleObject GetObjectAt(Vector2 position)
     {
-        ActorGrid[(int)position.x, (int)position.y] = actor;
+        return ObjectGrid[(int)position.x, (int)position.y];
+    }
+
+    public void SetObjectAt(BattleObject obj, Vector2 position)
+    {
+        ObjectGrid[(int)position.x, (int)position.y] = obj;
     }
 }

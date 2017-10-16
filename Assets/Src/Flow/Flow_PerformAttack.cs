@@ -12,21 +12,8 @@ public class Flow_PerformAttack : IFlowController
     public void Start()
     {
         BattleSceneController.Main.HeadsupText.text = "Choose the attack location (ESC to cancel)";
-
-        GameObject patternObject = new GameObject("_ATTACK_PATTERN");
-        patternObject.transform.position = new Vector3(patternObject.transform.position.x, patternObject.transform.position.y, -5); //TODO
-
-        MeshFilter meshFilter = (MeshFilter)patternObject.AddComponent(typeof(MeshFilter));
-        meshFilter.mesh = MeshGenerator.GetPatternMesh(BattleSceneController.Main.SelectedActor.Type.Pattern, PatternFlags.Attack,
-            BattleSceneController.Main.SelectedActor.Position);
-
-        MeshRenderer renderer = patternObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-        renderer.material.shader = Shader.Find ("Sprites/Default");
-
-        Texture2D texture = (Texture2D)Resources.Load("Sprites/board");
-        renderer.material.mainTexture = texture;
-
-        currentPattern = patternObject;
+        currentPattern = BattleSceneController.Main.SelectedActor.Type.Pattern.GetVisualObject(PatternFlags.Attack, BattleSceneController.Main.SelectedActor.Position,
+                                                                                               BattleSceneController.Main.SelectedActor.Inverted);
     }
 
     void Choose(Vector2 position)
@@ -34,14 +21,16 @@ public class Flow_PerformAttack : IFlowController
         if (BoardUtils.IsInsideBoard(position) &&
             BattleSceneController.Main.SelectedActor.CanAttackAt(position))
         {
-            BattleActor actor = GameData.CurrentBattle.Board.GetActorAt(position);
-            actor.TakeDamage(BattleSceneController.Main.SelectedActor.Type.Attack);
-
-            //TODO eliminate if it's the case
+            BattleObject obj = GameData.CurrentBattle.Board.GetObjectAt(position);
+            obj.TakeDamage(BattleSceneController.Main.SelectedActor.Type.Attack);
 
             BattleSceneController.Main.PerformedAttack = true;
             GameObject.Destroy(currentPattern);
-            BattleSceneController.Main.SwitchFlow(FlowState.ChooseActorToPerform);
+
+            if (obj.Properties.ContainsKey("isOrb") && obj.Properties["isOrb"] == "true")
+                GameData.CurrentBattle.EndGameWithWinner(obj.Owner.GetEnemy());
+            else
+                BattleSceneController.Main.SwitchFlow(FlowState.ChooseActorToPerform);
         }
     }
 
